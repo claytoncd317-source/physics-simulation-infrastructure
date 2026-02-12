@@ -1,192 +1,98 @@
-\# C++ Kinematic Simulation
+# C++ Simulation Mechanics
 
+This repository contains two focused C++ simulation projects demonstrating core techniques used in real-time physics and graphics systems.
 
-
-\## Overview
-
-
-
-This project demonstrates a deterministic kinematic motion model implemented in modern C++ using a fixed timestep update loop and numerical integration.
-
-
-
-It simulates how an object's position evolves over time under a constant applied force, following Newtonian mechanics. The implementation mirrors the core update structure used in real-time physics engines, robotics simulators, and interactive simulation environments.
-
-
+The goal is to show how continuous physical behavior is approximated numerically using fixed-timestep integration—the same pattern used in game engines, robotics simulators, and visualization pipelines.
 
 ---
 
+## Project 1 — Kinematic Mover
 
+**Location:** `Project1_KinematicMover`
 
-\## Mathematical Model
+### Purpose
 
+Demonstrates deterministic motion of a single body under constant force using **Semi-Implicit Euler Integration**.
 
+### Mathematical Model
 
 We begin with Newton’s Second Law:
 
-
-
 F = ma
 
-
-
-For simplicity, mass is assumed to be 1:
-
-
+Assuming unit mass:
 
 a = F
 
-
-
-Velocity is the time integral of acceleration:
-
-
+Velocity is integrated from acceleration:
 
 v(t + Δt) = v(t) + a · Δt
 
-
-
-Position is the time integral of velocity:
-
-
+Position is integrated from velocity:
 
 x(t + Δt) = x(t) + v(t + Δt) · Δt
 
+This produces uniformly accelerated motion and illustrates how simulation steps evolve system state over time.
 
+### What It Shows
 
-This stepping method is known as \*\*Semi-Implicit Euler Integration\*\*, a widely used numerical integrator in real-time simulation because of its stability and computational efficiency.
-
-
-
----
-
-
-
-\## What the Simulation Shows
-
-
-
-A constant force is applied along the X-axis each timestep.
-
-This produces:
-
-
-
-\* Linearly increasing velocity
-
-\* Quadratically increasing position over time
-
-\* Deterministic motion under a fixed 60 Hz timestep
-
-
-
-The program outputs the evolving state, demonstrating numerical integration of motion.
-
-
+* Fixed 60 Hz timestep loop
+* Numerical integration of motion
+* Separation of math, state, and simulation logic
+* Deterministic, reproducible results
 
 ---
 
+## Project 2 — Particle System Simulation (Game Graphics Style)
 
+**Location:** `Project2_ParticleSystemSim`
 
-\## Project Structure
+### Purpose
 
+Implements a multi-particle physics system similar to those used for real-time visual effects such as sparks, debris, or smoke.
 
+Each particle is simulated independently using the same integration method but scaled across many bodies.
 
-```
+### Simulation Pipeline
 
-Project1\_KinematicMover/
+Each frame performs:
 
-│
+Emit → Integrate → Apply Forces → Handle Collision → Age → Cull Dead
 
-├── include/          # Public interfaces (Vector2, KinematicBody)
+### Physics Modeled
 
-├── src/              # Implementations
+* Gravity acceleration
+* Velocity damping (air resistance)
+* Ground-plane collision with energy loss
+* Finite particle lifetime
 
-├── main.cpp          # Simulation driver loop
+This mirrors the CPU-side update used before particle data is uploaded to the GPU for rendering.
 
-└── CMakeLists.txt    # Build configuration
+### What It Shows
 
-```
-
-
-
-The code separates math, state, and simulation stepping to reflect real-world engine organization.
-
-
+* Many-body time integration
+* Lifetime management and culling
+* Data-oriented simulation loop
+* Real-time graphics–style update structure
 
 ---
 
-
-
-\## Build Instructions (Windows + Visual Studio 2022)
-
-
+## Build Instructions (Windows + Visual Studio 2022)
 
 Open:
 
-
-
-x64 Native Tools Command Prompt for VS 2022
-
-
-
-Then run:
-
-
-
-cmake -S Project1\_KinematicMover -B Project1\_KinematicMover/build -G "Visual Studio 17 2022"
-
-cmake --build Project1\_KinematicMover/build
-
-Project1\_KinematicMover/build/Debug/KinematicMover.exe
-
-
+**x64 Native Tools Command Prompt for VS 2022**
 
 ---
 
+### Build Project 1
 
-
-\## Example Output
-
-
-
-```
-
-Time: 0.016  Position: (0.00768, 0)
-
-Time: 0.032  Position: (0.01536, 0)
-
-Time: 0.048  Position: (0.0256, 0)
-
-```
-
-
-
-The increasing spacing between positions reflects constant acceleration.
-
-
+cmake -S Project1_KinematicMover -B Project1_KinematicMover/build -G "Visual Studio 17 2022"
+cmake --build Project1_KinematicMover/build
+Project1_KinematicMover/build/Debug/KinematicMover.exe
 
 ---
 
+### Build Project 2
 
-
-\## Purpose
-
-
-
-This repository focuses on the mathematical and architectural foundations of simulation rather than rendering or UI. It demonstrates how continuous physical laws are approximated numerically to evolve state over discrete timesteps.
-
-
-
----
-
-
-
-\## Author
-
-
-
-Clayton Christudass
-
-
-
+cmake -S Project2_ParticleSystemSim
