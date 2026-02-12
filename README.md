@@ -1,353 +1,68 @@
 # C++ Simulation Mechanics
 
-**Deterministic Integration and Real-Time Particle Dynamics**
-
-This repository contains two focused simulation projects implemented in modern C++ that demonstrate how continuous physical systems are approximated numerically in real-time environments such as game engines, robotics simulators, and GPU-driven visualization pipelines.
-
-Rather than solving equations analytically, real-time systems advance state incrementally using numerical integration over small, fixed timesteps. These projects illustrate that process from first principles and scale it from a single rigid body to a many-particle system typical of graphics simulations.
+This repository contains small, focused C++ projects that explore how real-time simulation systems evolve physical state over fixed timesteps.
+The emphasis is on numerical integration, deterministic updates, and patterns commonly used in physics engines and graphics pipelines.
 
 ---
 
-# Project 1 — Kinematic Mover
+## Projects
 
-**Location:** `Project1_KinematicMover`
+### Project 1 — Kinematic Mover
 
-## Objective
+**Path:** `Project1_KinematicMover`
 
-To model deterministic motion of a body subjected to a constant force using a fixed timestep integrator.
-This demonstrates the foundational update loop used in physics engines and simulation frameworks.
+A single-body simulation demonstrating deterministic motion under constant force using Semi-Implicit Euler integration.
 
----
+Focus:
 
-## Physical Model
+* Fixed timestep update loop
+* Force → velocity → position propagation
+* Minimal structure used in physics stepping systems
 
-We begin with **Newton’s Second Law of Motion**:
-
-```
-F = m a
-```
-
-Where:
-
-* `F` = applied force
-* `m` = mass
-* `a` = acceleration
-
-To simplify the system and isolate integration behavior, we assume:
-
-```
-m = 1
-```
-
-So the equation reduces to:
-
-```
-a = F
-```
-
-This means applied force directly determines acceleration.
+See the project README for mathematical details and implementation notes.
 
 ---
 
-## From Continuous Physics to Discrete Simulation
+### Project 2 — Particle System Simulation
 
-Physics describes motion using derivatives:
+**Path:** `Project2_ParticleSystemSim`
 
-```
-a(t) = dv/dt
-v(t) = dx/dt
-```
+A many-body particle simulation similar to CPU-side updates used for real-time visual effects (sparks, debris, etc.).
 
-A computer cannot evaluate derivatives continuously, so we integrate them numerically over a timestep Δt.
+Focus:
 
----
+* Independent particle integration
+* Gravity, damping, and collision constraints
+* Lifetime management and culling
 
-## Semi-Implicit Euler Integration
-
-We approximate the integral of acceleration over a small time interval:
-
-```
-v(t + Δt) = v(t) + a(t) · Δt
-```
-
-Then update position using the *new* velocity:
-
-```
-x(t + Δt) = x(t) + v(t + Δt) · Δt
-```
-
-This is known as **Semi-Implicit Euler Integration**, chosen because it is:
-
-* Stable for real-time stepping
-* Computationally inexpensive (O(1) per body)
-* Widely used in real-time physics (PhysX, Bullet, Box2D)
+See the project README for modeling assumptions and equations.
 
 ---
 
-## Behavior Under Constant Force
+## Build Requirements (Windows)
 
-If a constant force is applied:
+* Visual Studio 2022
+* CMake 3.20+
+* Use: **x64 Native Tools Command Prompt for VS 2022**
 
-```
-a = constant
-```
-
-Then analytically:
-
-```
-v(t) = a t
-x(t) = (1/2) a t²
-```
-
-The simulation reconstructs this quadratic trajectory numerically, frame by frame.
+Each project builds independently using its own `CMakeLists.txt`.
 
 ---
 
-## Simulation Loop Structure
+## Purpose
 
-Each fixed update performs:
-
-```
-Accumulate Forces
-→ Integrate Velocity
-→ Integrate Position
-→ Clear Forces
-```
-
-This deterministic stepping ensures identical results across runs, which is essential for reproducibility in simulation and robotics.
+These examples illustrate how continuous physical laws are approximated numerically in discrete simulation steps—the same core idea underlying real-time physics, robotics simulation, and GPU-driven visualization workflows.
 
 ---
 
-## What This Project Demonstrates
+## Next Steps (Planned)
 
-* Fixed 60 Hz timestep integration
-* Deterministic state propagation
-* Numerical approximation of continuous motion
-* Clean separation of:
-
-  * Math layer (`Vector2`)
-  * Physical state (`KinematicBody`)
-  * Simulation driver (`main.cpp`)
-
-This mirrors the architecture of real simulation subsystems.
+* Config-driven simulation runner (headless execution)
+* Containerization for reproducible runs
+* Cloud deployment using Terraform
 
 ---
 
-# Project 2 — Particle System Simulation (Game Graphics Style)
-
-**Location:** `Project2_ParticleSystemSim`
-
-## Objective
-
-To extend the same integration principles to a many-body system representing particles used in real-time visual effects such as sparks, smoke, and debris.
-
-Unlike rigid body simulation, particles are independent and short-lived, making them ideal for massively parallel evaluation.
-
----
-
-## Particle State Representation
-
-Each particle maintains:
-
-```
-position  → x(t)
-velocity  → v(t)
-lifetime  → remaining simulation time
-```
-
-Particles are stored in a contiguous array, enabling efficient iteration — the same structure used before uploading simulation data to GPU buffers.
-
----
-
-## Forces Applied
-
-### Gravity
-
-A constant downward acceleration:
-
-```
-g = (0, −9.8 m/s²)
-```
-
-Velocity update:
-
-```
-v(t + Δt) = v(t) + g Δt
-```
-
----
-
-### Damping (Air Resistance Approximation)
-
-To simulate drag, velocity is scaled each frame:
-
-```
-v ← v · d
-```
-
-Where:
-
-```
-0 < d < 1
-```
-
-This models exponential decay:
-
-```
-v(t) ≈ v₀ e^(−kt)
-```
-
----
-
-### Ground Collision Constraint
-
-If a particle penetrates the ground plane:
-
-```
-y < 0
-```
-
-We project it back:
-
-```
-y = 0
-```
-
-And invert velocity with energy loss:
-
-```
-v_y ← −e v_y
-```
-
-Where:
-
-```
-0 < e < 1
-```
-
-This mimics inelastic collision response.
-
----
-
-### Lifetime Decay
-
-Particles exist for finite duration:
-
-```
-lifetime ← lifetime − Δt
-```
-
-Particles are culled when:
-
-```
-lifetime ≤ 0
-```
-
-This prevents unbounded growth and mirrors GPU particle lifecycles.
-
----
-
-## Frame Update Pipeline
-
-Each simulation step executes:
-
-```
-Emit New Particles
-→ Integrate Motion (Euler Step)
-→ Apply Forces (Gravity + Damping)
-→ Resolve Constraints (Ground Collision)
-→ Age Particles
-→ Remove Expired Particles
-```
-
-This is structurally identical to CPU-side update stages in real-time rendering engines before issuing draw calls.
-
----
-
-## Mathematical Interpretation
-
-Each particle independently solves:
-
-```
-d²x/dt² = g − kv
-```
-
-Numerically approximated as:
-
-```
-v_{n+1} = (v_n + g Δt) d
-x_{n+1} = x_n + v_{n+1} Δt
-```
-
-This produces damped ballistic motion — the classic trajectory used in particle VFX.
-
----
-
-## What This Project Demonstrates
-
-* Many-body simulation scaling from a shared integrator
-* Time-based lifecycle management
-* Constraint-based correction instead of analytic collision solving
-* CPU-side physics preparation for graphics pipelines
-* Real-time simulation structure used in:
-
-  * Game engines
-  * Visualization tools
-  * GPU particle systems
-
----
-
-# Build Instructions (Windows + Visual Studio 2022)
-
-Open:
-
-```
-x64 Native Tools Command Prompt for VS 2022
-```
-
----
-
-## Build Project 1
-
-```
-cmake -S Project1_KinematicMover -B Project1_KinematicMover/build -G "Visual Studio 17 2022"
-cmake --build Project1_KinematicMover/build
-Project1_KinematicMover/build/Debug/KinematicMover.exe
-```
-
----
-
-## Build Project 2
-
-```
-cmake -S Project2_ParticleSystemSim -B Project2_ParticleSystemSim/build -G "Visual Studio 17 2022"
-cmake --build Project2_ParticleSystemSim/build
-Project2_ParticleSystemSim/build/Debug/ParticleSystemSim.exe
-```
-
----
-
-# Why These Projects Matter
-
-Real-time systems cannot solve physics analytically for complex scenes.
-Instead, they evolve state incrementally:
-
-```
-state(t + Δt) ≈ state(t) + derivative · Δt
-```
-
-This repository demonstrates that core principle at two scales:
-
-| Scale                            | Example                      |
-| -------------------------------- | ---------------------------- |
-| Single-body deterministic motion | Rigid body stepping          |
-| Many-body stochastic motion      | Graphics particle simulation |
-
-Together they illustrate how simulation engines bridge continuous mathematics and discrete computation.
-
----
-
-# Author
+## Author
 
 Clayton Christudass
-Exploration of numerical simulation, real-time physics integration, and graphics-oriented computation pipelines.
