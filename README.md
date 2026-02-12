@@ -1,68 +1,66 @@
-# C++ Simulation Mechanics
+# physics-simulation-infrastructure
 
-This repository contains small, focused C++ projects that explore how real-time simulation systems evolve physical state over fixed timesteps.
-The emphasis is on numerical integration, deterministic updates, and patterns commonly used in physics engines and graphics pipelines.
+Small C++ projects exploring fixed-timestep simulation and how those workloads can be packaged and executed in a reproducible environment.
+
+The repository is split into two parts:
+
+* `Project*` directories → simulation code
+* `infra/` → containerization and infrastructure for running simulations as jobs
 
 ---
 
 ## Projects
 
-### Project 1 — Kinematic Mover
+### Project1_KinematicMover
 
-**Path:** `Project1_KinematicMover`
-
-A single-body simulation demonstrating deterministic motion under constant force using Semi-Implicit Euler integration.
+Single rigid body advanced under constant force using a semi-implicit Euler step.
 
 Focus:
 
-* Fixed timestep update loop
-* Force → velocity → position propagation
-* Minimal structure used in physics stepping systems
+* Deterministic update loop
+* Force → velocity → position integration
+* Minimal math + state separation
 
-See the project README for mathematical details and implementation notes.
+### Project2_ParticleSystemSim
 
----
-
-### Project 2 — Particle System Simulation
-
-**Path:** `Project2_ParticleSystemSim`
-
-A many-body particle simulation similar to CPU-side updates used for real-time visual effects (sparks, debris, etc.).
+Independent particle updates similar to CPU-side work done before GPU particle rendering.
 
 Focus:
 
-* Independent particle integration
-* Gravity, damping, and collision constraints
-* Lifetime management and culling
+* Many-body stepping
+* Gravity, damping, ground constraint
+* Lifetime culling
 
-See the project README for modeling assumptions and equations.
+Each project builds independently with CMake.
 
 ---
 
-## Build Requirements (Windows)
+## Build (Windows)
+
+Requirements:
 
 * Visual Studio 2022
-* CMake 3.20+
-* Use: **x64 Native Tools Command Prompt for VS 2022**
+* CMake ≥ 3.20
 
-Each project builds independently using its own `CMakeLists.txt`.
+Use the "x64 Native Tools Command Prompt for VS 2022".
 
----
+Example:
 
-## Purpose
-
-These examples illustrate how continuous physical laws are approximated numerically in discrete simulation steps—the same core idea underlying real-time physics, robotics simulation, and GPU-driven visualization workflows.
+cmake -S Project1_KinematicMover -B Project1_KinematicMover/build -G "Visual Studio 17 2022"
+cmake --build Project1_KinematicMover/build
 
 ---
 
-## Next Steps (Planned)
+## Infrastructure (in progress)
 
-* Config-driven simulation runner (headless execution)
-* Containerization for reproducible runs
-* Cloud deployment using Terraform
+`infra/` will contain:
+
+* Docker image definitions for simulation runners
+* Terraform configuration for provisioning compute to execute them
+* Helper scripts for local and remote execution
 
 ---
 
-## Author
+## Intent
 
-Clayton Christudass
+The goal is to treat simulation code as a workload that can be executed locally or scheduled remotely, not just as a standalone application.
